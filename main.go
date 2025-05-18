@@ -31,7 +31,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/poi", poiHandler.GetPOI)
+	mux.HandleFunc("/poi", poiHandler.Handle)
 
 	server := &http.Server{
 		Addr:    ":8080",

@@ -32,13 +32,13 @@ func (db *DB) InsertPOIsBatch(ctx context.Context, pois []model.POI) error {
 	batch := &pgx.Batch{}
 	for _, poi := range pois {
 		tagsJSON, err := json.Marshal(poi.Tags)
-		if (err != nil) {
+		if err != nil {
 			return fmt.Errorf("failed to marshall tags %w", err)
 		}
 		batch.Queue(
 			`INSERT INTO spotter.pois (id, name, amenity, lat, lon, cell, tags)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-			 poi.ID, poi.Name, poi.Amenity, poi.Lat, poi.Lon, poi.Cell, tagsJSON,
+			poi.ID, poi.Name, poi.Amenity, poi.Lat, poi.Lon, poi.Cell, tagsJSON,
 		)
 	}
 	br := db.pool.SendBatch(ctx, batch)
@@ -72,11 +72,10 @@ func (db *DB) FindPOIsByH3Cells(ctx context.Context, cells []h3.Cell) ([]model.P
 		}
 		pois = append(pois, p)
 	}
-	
+
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("row iteration: %w", err)
 	}
 
 	return pois, nil
 }
-

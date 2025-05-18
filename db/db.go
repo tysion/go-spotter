@@ -7,17 +7,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tysion/spotter/model"
+	"github.com/uber/h3-go/v4"
 )
-
-type POI struct {
-	ID		int64
-	Name	string
-	Amenity	string
-	Lat		float64
-	Lon		float64
-	Cell 	int64
-	Tags	map[string]any	
-}
 
 type DB struct {
 	pool *pgxpool.Pool
@@ -36,7 +28,7 @@ func (db *DB) Close() {
 	db.pool.Close()
 }
 
-func (db *DB) InsertPOIsBatch(ctx context.Context, pois []POI) error {
+func (db *DB) InsertPOIsBatch(ctx context.Context, pois []model.POI) error {
 	batch := &pgx.Batch{}
 	for _, poi := range pois {
 		tagsJSON, err := json.Marshal(poi.Tags)
@@ -62,7 +54,7 @@ func (db *DB) InsertPOIsBatch(ctx context.Context, pois []POI) error {
 	return nil
 }
 
-func (db *DB) FindPOIsByH3Cells(ctx context.Context, cells []int64) ([]POI, error) {
+func (db *DB) FindPOIsByH3Cells(ctx context.Context, cells []h3.Cell) ([]model.POI, error) {
 	rows, err := db.pool.Query(ctx, `
 		SELECT id, name, amenity, lat, lon, cell, tags
 		FROM spotter.pois
@@ -72,9 +64,9 @@ func (db *DB) FindPOIsByH3Cells(ctx context.Context, cells []int64) ([]POI, erro
 	}
 	defer rows.Close()
 
-	var pois []POI
+	var pois []model.POI
 	for rows.Next() {
-		var p POI
+		var p model.POI
 		if err := rows.Scan(&p.ID, &p.Name, &p.Amenity, &p.Lat, &p.Lon, &p.Cell, &p.Tags); err != nil {
 			return nil, fmt.Errorf("scan poi: %w", err)
 		}
@@ -84,7 +76,6 @@ func (db *DB) FindPOIsByH3Cells(ctx context.Context, cells []int64) ([]POI, erro
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("row iteration: %w", err)
 	}
-
 
 	return pois, nil
 }

@@ -1,4 +1,4 @@
-module spotter
+module github.com/tysion/spotter
 
 go 1.24.2
 

@@ -1,32 +1,57 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/tysion/spotter/db"
+	"github.com/tysion/spotter/handler"
 )
 
-type HelloResponse struct {
-	Name string `json:"name"`
-}
-
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	var response HelloResponse
-
-	response.Name = r.URL.Query().Get("name")
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-}
-
 func main() {
-	http.HandleFunc("/hello", helloHandler)
-
-	fmt.Println("Starting server at :8080")
-
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		log.Fatal(err)
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "postgres://postgres:password@localhost:5432/postgres" // или своё
 	}
+
+	database, err := db.New(dsn)
+	if err != nil {
+		log.Fatalf("failed to connect to DB: %v", err)
+	}
+	defer database.Close()
+
+	poiHandler, err := handler.NewPOIHandler(database)
+	if err != nil {
+		log.Fatalf("failed to initialize POI handler: %v", err)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/poi", poiHandler.GetPOI)
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	go func() {
+		log.Println("Server running on http://localhost:8080")
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTP server error: %v", err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
+
+	log.Println("Shutting down...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = server.Shutdown(ctx)
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/tysion/spotter/model"
+	"github.com/tysion/spotter/internal/model"
 	"github.com/uber/h3-go/v4"
 )
 
@@ -64,7 +64,7 @@ func (db *DB) FindPOIsByH3Cells(ctx context.Context, cells []h3.Cell) ([]model.P
 	}
 	defer rows.Close()
 
-	var pois []model.POI
+	pois := make([]model.POI, 0)
 	for rows.Next() {
 		var p model.POI
 		if err := rows.Scan(&p.ID, &p.Name, &p.Amenity, &p.Lat, &p.Lon, &p.Cell, &p.Tags); err != nil {

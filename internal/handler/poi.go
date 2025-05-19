@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/tysion/spotter/db"
-	"github.com/tysion/spotter/model"
+	"github.com/tysion/spotter/internal/db"
+	"github.com/tysion/spotter/internal/model"
 	"github.com/uber/h3-go/v4"
 )
 

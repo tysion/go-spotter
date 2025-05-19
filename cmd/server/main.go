@@ -9,14 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tysion/spotter/db"
-	"github.com/tysion/spotter/handler"
+	"github.com/tysion/spotter/internal/db"
+	"github.com/tysion/spotter/internal/handler"
 )
 
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://postgres:password@localhost:5432/postgres" // или своё
+		dsn = "postgres://spotter:1234@localhost:35432/spotter"
 	}
 
 	database, err := db.New(dsn)

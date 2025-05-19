@@ -1,15 +1,14 @@
 CREATE SCHEMA IF NOT EXISTS spotter;
 
-CREATE TYPE spotter.poi AS
-(
+CREATE TYPE spotter.poi AS (
     id BIGINT,
-    name TEXT NOT NULL,
-    amenity TEXT NOT NULL,
-    lat DOUBLE PRECISION NOT NULL,
-    lon DOUBLE PRECISION NOT NULL,
-    cell BIGINT NOT NULL,
-    tags JSONB NOT NULL
-)
+    name TEXT,
+    amenity TEXT,
+    lat DOUBLE PRECISION,
+    lon DOUBLE PRECISION,
+    cell BIGINT,
+    tags JSONB
+);
 
 CREATE TABLE IF NOT EXISTS spotter.pois (
     id BIGINT,

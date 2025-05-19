@@ -12,3 +12,7 @@ loader:
 
 clean:
 	rm -rf $(BINDIR)
+
+format:
+	@echo "Formatting Go code..."
+	gofmt -s -w .

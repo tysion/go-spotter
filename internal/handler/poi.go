@@ -11,17 +11,17 @@ import (
 )
 
 type POIHandler struct {
-	db 			*db.DB
-	resolution 	int
-	kRing		int
+	db         *db.DB
+	resolution int
+	kRing      int
 }
 
 type CreatePOIRequest struct {
-	Type 		string				`json:"type"`
-	ID			int64				`json:"id"`
-	Lat 		float64				`json:"lat"`
-	Lon 		float64				`json:"lon"`
-	Tags 		map[string]any		`json:"tags"`
+	Type string         `json:"type"`
+	ID   int64          `json:"id"`
+	Lat  float64        `json:"lat"`
+	Lon  float64        `json:"lon"`
+	Tags map[string]any `json:"tags"`
 }
 
 func NewPOIHandler(db *db.DB) (*POIHandler, error) {
@@ -98,7 +98,7 @@ func (h *POIHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	var req []CreatePOIRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 

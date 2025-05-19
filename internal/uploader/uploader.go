@@ -33,10 +33,10 @@ func toCreatePOIRequest(elements []overpass.Element) []handler.CreatePOIRequest 
 	var req []handler.CreatePOIRequest
 	for _, elem := range elements {
 		req = append(req, handler.CreatePOIRequest{
-			ID: 	elem.ID,
-			Lat: 	elem.Lat,
-			Lon: 	elem.Lon,
-			Tags: 	elem.Tags,
+			ID:   elem.ID,
+			Lat:  elem.Lat,
+			Lon:  elem.Lon,
+			Tags: elem.Tags,
 		})
 	}
 	return req

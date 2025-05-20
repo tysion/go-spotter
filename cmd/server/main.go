@@ -2,18 +2,23 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/tysion/spotter/internal/db"
 	"github.com/tysion/spotter/internal/handler"
+	"github.com/tysion/spotter/internal/logger"
 )
 
 func main() {
+	logger.Setup()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		dsn = "postgres://spotter:1234@localhost:35432/spotter"
@@ -21,13 +26,13 @@ func main() {
 
 	database, err := db.New(dsn)
 	if err != nil {
-		log.Fatalf("failed to connect to DB: %v", err)
+		log.Fatal().Err(err).Msg("Failed to initialize DB")
 	}
 	defer database.Close()
 
 	poiHandler, err := handler.NewPOIHandler(database)
 	if err != nil {
-		log.Fatalf("failed to initialize POI handler: %v", err)
+		log.Fatal().Err(err).Msg("Failed to initialize POI handler")
 	}
 
 	mux := http.NewServeMux()
@@ -39,9 +44,9 @@ func main() {
 	}
 
 	go func() {
-		log.Println("Server running on http://localhost:8080")
+		log.Info().Msg("Server running on http://localhost:8080")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("HTTP server error: %v", err)
+			log.Fatal().Err(err).Msg("HTTP server error")
 		}
 	}()
 
@@ -49,7 +54,7 @@ func main() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	log.Println("Shutting down...")
+	log.Info().Msg("Shutting down...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

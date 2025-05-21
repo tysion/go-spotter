@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,10 +20,12 @@ func main() {
 	logger.Setup()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		dsn = "postgres://spotter:1234@localhost:35432/spotter"
+	databasePassword := os.Getenv("POSTGRES_PASSWORD")
+	if databasePassword == "" {
+		log.Fatal().Msg("POSTGRES_PASSWORD not set")
 	}
+
+	dsn := fmt.Sprintf("postgres://spotter:%s@localhost:35432/spotter", databasePassword)
 
 	database, err := db.New(dsn)
 	if err != nil {

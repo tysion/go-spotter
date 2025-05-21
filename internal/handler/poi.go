@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -15,6 +16,7 @@ type POIHandler struct {
 	db         *db.DB
 	resolution int
 	kRing      int
+	limit      int
 }
 
 type CreatePOIRequest struct {
@@ -26,7 +28,7 @@ type CreatePOIRequest struct {
 }
 
 func NewPOIHandler(db *db.DB) (*POIHandler, error) {
-	return &POIHandler{db: db, resolution: 9, kRing: 1}, nil
+	return &POIHandler{db: db, resolution: 9, kRing: 1, limit: 10}, nil
 }
 
 func (h *POIHandler) Handle(w http.ResponseWriter, r *http.Request) {
@@ -89,14 +91,41 @@ func (h *POIHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	type POIWithDistance struct {
+		POI	model.POI
+		Distance float64
+	}
+
+	var extended []POIWithDistance
+	for _, poi := range pois {
+		distance := h3.GreatCircleDistanceM(h3.NewLatLng(lat, lon), h3.NewLatLng(poi.Lat, poi.Lon))
+		extended = append(extended, POIWithDistance{
+			POI:      poi,
+			Distance: distance,
+		})
+	}
+
+	sort.Slice(extended, func(i int, j int) bool {
+		return extended[i].Distance < extended[j].Distance
+	})
+
+	if len(extended) > h.limit {
+		extended = extended[:h.limit]
+	}
+
+	var sorted []model.POI
+	for _, extendedPoi := range extended {
+		sorted = append(sorted, extendedPoi.POI)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(pois); err != nil {
+	if err := json.NewEncoder(w).Encode(sorted); err != nil {
 		log.Error().Err(err).Msg("Failed to encode JSON")
 		http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
 	}
 
-	log.Info().Int("result_count", len(pois)).Msg("Found POIs")
+	log.Info().Int("result_count", len(sorted)).Msg("Found POIs")
 }
 
 func (h *POIHandler) handlePost(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +157,7 @@ func (h *POIHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 				Float64("lon", item.Lon).
 				Err(err).
 				Msg("Failed to convert lat/lon to H3 cell")
-				continue
+			continue
 		}
 
 		amenity, ok := item.Tags["amenity"].(string)

@@ -92,7 +92,7 @@ func (h *POIHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type POIWithDistance struct {
-		POI	model.POI
+		POI      model.POI
 		Distance float64
 	}
 

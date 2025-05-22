@@ -20,12 +20,22 @@ func main() {
 	logger.Setup()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	databasePassword := os.Getenv("POSTGRES_PASSWORD")
-	if databasePassword == "" {
-		log.Fatal().Msg("POSTGRES_PASSWORD not set")
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "localhost"
 	}
 
-	dsn := fmt.Sprintf("postgres://spotter:%s@localhost:35432/spotter", databasePassword)
+	dbPassword := os.Getenv("DB_PASSWORD")
+	if dbPassword == "" {
+		log.Fatal().Msg("DB_PASSWORD not set")
+	}
+
+	dbPort := os.Getenv("DB_PORT")
+	if dbPort == "" {
+		dbPort = "35432"
+	}
+
+	dsn := fmt.Sprintf("postgres://spotter:%s@%s:%s/spotter", dbPassword, dbHost, dbPort)
 
 	database, err := db.New(dsn)
 	if err != nil {

@@ -15,10 +15,16 @@ import (
 )
 
 var AMENITY_CAFE = "cafe"
+var POI_API_URL = "http://localhost:8080"
 
 func main() {
 	logger.Setup()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
+	url := os.Getenv("POI_API_URL")
+	if url != "" {
+		POI_API_URL = url
+	}
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken == "" {
@@ -93,7 +99,7 @@ func sendNearbyPOIs(bot *tgbotapi.BotAPI, chatId int64, lat float64, lon float64
 
 	bot.Send(tgbotapi.NewMessage(chatId, "🔍 Ищу рядом с вами..."))
 
-	url := "http://localhost:8080/poi?lat=" + latStr + "&lon=" + lonStr
+	url := POI_API_URL + "/poi?lat=" + latStr + "&lon=" + lonStr
 
 	resp, err := http.Get(url)
 	if err != nil {

@@ -1,0 +1,15 @@
+FROM golang:1.24 AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  build-essential cmake git && \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . .
+
+RUN go mod download
+RUN go build -ldflags="-s -w" -o /spotter-bot ./cmd/bot
+
+FROM gcr.io/distroless/base
+COPY --from=builder /spotter-bot /
+ENTRYPOINT ["/spotter-bot"]
